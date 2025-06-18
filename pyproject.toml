@@ -1,19 +1,24 @@
-[tool.poetry]
+[project]
 name = "epubmetadataeditor"
 version = "0.1.0"
 description = ""
-authors = ["T. E. Kalaycı"]
-license = "GNU General Public License v3.0"
+authors = [
+    {name = "T. E. Kalaycı"},
+]
+license = {text = "GNU General Public License v3.0"}
+requires-python = ">=3.13"
+dependencies = [
+    "EbookLib",
+    "PyGObject",
+]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-EbookLib = "^0.17"
-pgi = "^0.0.11"
-pycairo = "^1.20.0"
-PyGObject = "^3.38.0"
-
-[tool.poetry.dev-dependencies]
+[dependency-groups]
+dev = [
+    "autopep8",
+    "black",
+    "isort"
+]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"

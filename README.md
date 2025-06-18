@@ -4,8 +4,8 @@ Just a simple Epub Metadata editor for learning [GTK](https://www.gtk.org/) in P
 
 ## Libraries
 
-- This project is using [poetry](https://python-poetry.org/) and dependencies are defined in [pyproject.toml](./pyproject.toml) file.
-- It is developed using Python v3 and [PyGobject](https://pygobject.readthedocs.io/en/latest/index.html).
+- This project is using [uv](https://docs.astral.sh/uv/getting-started/) and dependencies are defined in [pyproject.toml](./pyproject.toml) file.
+- It is developed using Python and [PyGobject](https://pygobject.readthedocs.io/en/latest/index.html).
 - Using [ebooklib](https://github.com/aerkalov/ebooklib) for handle EPUB2/EPUB3 format.
 
 ## Running
@@ -13,11 +13,9 @@ Just a simple Epub Metadata editor for learning [GTK](https://www.gtk.org/) in P
 It is tested only in GNU/Linux operating system.
 
 - Install dependencies:
-  1. [install the following packages using package manager](https://pygobject.readthedocs.io/en/latest/getting_started.html#ubuntu-getting-started): `sudo apt get install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0`
-  2. install remaining dependencies: `poetry update`
-- Open the Python environment: `poetry shell`
-- Run the main program: `python main.py`
-- You can also directly run using: `poetry run python main.py`
+  1. [install the following packages using package manager](https://pygobject.readthedocs.io/en/latest/getting_started.html#ubuntu-getting-started): `sudo apt get install libcairo2-dev libgirepository-2.0-dev pkg-config gcc python3-dev gir1.2-gtk-3.0`
+  2. install remaining dependencies: `uv lock && uv sync`
+  3. You can also directly run using: `uv run python main.py`
 
 ## Possible improvements
 
@@ -33,13 +31,13 @@ It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
 
 ## Package management
 
-This project uses [poetry](https://python-poetry.org/) Python package and dependency manager.
+We are using [uv](https://docs.astral.sh/uv/getting-started/) Python package and dependency
+manager.
 
-- Init interactively `poetry init`
-- Add package `poetry add package-name`
-- Remove package `poetry remove package-name`
-- Install dependencies `poetry install`
-- Update dependencies `poetry update`
-- Show available packages `poetry show`
-- Run a command in the virtualenv `poetry run command`
-- Open virtualenv `poetry shell`
+- Init interactively `uv init`
+- Add package `uv add package-name`
+- Remove package `uv remove package-name`
+- Create lockfile `uv lock`
+- Update dependencies `uv sync`
+- Show available packages `uv show`
+- Run a command in the virtualenv `uv run command`
