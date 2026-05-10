@@ -1,6 +1,6 @@
 import gi
 
-gi.require_version('Gtk', '3.0')
+gi.require_version("Gtk", "3.0")
 from data import AppEvent
 
 
@@ -18,7 +18,11 @@ class ToolbarView:
             "onOpenFolder": lambda _: self.event_bus.emit(AppEvent.REQUEST_FOLDER_OPEN),
             "onRefresh": lambda _: self.event_bus.emit(AppEvent.REQUEST_LIST_REFRESH),
             "onAbout": lambda _: self.event_bus.emit(AppEvent.REQUEST_SHOW_ABOUT),
-            "onSelectAll": lambda _: self.event_bus.emit(AppEvent.REQUEST_LIST_SELECT_ALL),
+            "onSelectAll": lambda _: self.event_bus.emit(
+                AppEvent.REQUEST_LIST_SELECT_ALL
+            ),
             "onSettings": lambda _: self.event_bus.emit(AppEvent.REQUEST_SHOW_SETTINGS),
-            "onDeselectAll": lambda _: self.event_bus.emit(AppEvent.REQUEST_LIST_DESELECT_ALL),
+            "onDeselectAll": lambda _: self.event_bus.emit(
+                AppEvent.REQUEST_LIST_DESELECT_ALL
+            ),
         }

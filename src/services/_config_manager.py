@@ -4,6 +4,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+
 class ConfigManager:
     def __init__(self, config_file: Path):
         self.config_file = config_file
@@ -25,7 +26,7 @@ class ConfigManager:
 
         try:
             self.config_dir.mkdir(parents=True, exist_ok=True)
-            with open(self.config_file, 'w') as f:
+            with open(self.config_file, "w") as f:
                 json.dump(self.data, f)
         except OSError as e:
             logger.error(f"Failed to save config: {e}")

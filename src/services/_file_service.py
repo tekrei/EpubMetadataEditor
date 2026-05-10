@@ -7,6 +7,7 @@ from gi.repository import Gio
 
 logger = logging.getLogger(__name__)
 
+
 class FileService:
     @staticmethod
     def rename(old_path: Path, new_name: str) -> Path:
@@ -26,9 +27,11 @@ class FileService:
         folder = str(Path(file_path).parent)
         if sys.platform == "linux" or sys.platform == "linux2":
             import subprocess
+
             subprocess.Popen(["xdg-open", folder])
         elif sys.platform == "darwin":
             import subprocess
+
             subprocess.Popen(["open", folder])
         elif sys.platform == "win32":
             os.startfile(folder)
@@ -40,10 +43,13 @@ class FileService:
         else:
             opener = "open" if sys.platform == "darwin" else "xdg-open"
             import subprocess
+
             subprocess.Popen([opener, file_path])
 
     @staticmethod
-    def find_files(directory: str | Path, pattern: str, recursive: bool = True) -> list[Path]:
+    def find_files(
+        directory: str | Path, pattern: str, recursive: bool = True
+    ) -> list[Path]:
         """Generic method to find files matching a pattern in a directory."""
         root = Path(directory)
 

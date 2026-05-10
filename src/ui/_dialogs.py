@@ -12,7 +12,9 @@ class SettingsDialog(Gtk.Dialog):
         content.set_spacing(10)
         content.set_border_width(12)
 
-        content.add(Gtk.Label(label="Naming Template (e.g. {year} - {title})", xalign=0))
+        content.add(
+            Gtk.Label(label="Naming Template (e.g. {year} - {title})", xalign=0)
+        )
         self.entry = Gtk.Entry()
         self.entry.set_text(current_template)
         self.entry.set_activates_default(True)
@@ -36,9 +38,13 @@ class SettingsDialog(Gtk.Dialog):
 
 
 class MetadataDiffDialog(Gtk.Dialog):
-    def __init__(self, parent, current_meta, fetched_meta, current_cover_data, remote_cover_data):
+    def __init__(
+        self, parent, current_meta, fetched_meta, current_cover_data, remote_cover_data
+    ):
         super().__init__(title="Compare Metadata", transient_for=parent, modal=True)
-        self.add_buttons("_Cancel", Gtk.ResponseType.CANCEL, "_Apply", Gtk.ResponseType.OK)
+        self.add_buttons(
+            "_Cancel", Gtk.ResponseType.CANCEL, "_Apply", Gtk.ResponseType.OK
+        )
         self.set_default_size(600, -1)
 
         content = self.get_content_area()
@@ -63,16 +69,22 @@ class MetadataDiffDialog(Gtk.Dialog):
 
         # Headers
         grid.attach(Gtk.Label(label="<b>Apply?</b>", use_markup=True), 0, 0, 1, 1)
-        grid.attach(Gtk.Label(label="<b>Field</b>", use_markup=True, xalign=1), 1, 0, 1, 1)
-        grid.attach(Gtk.Label(label="<b>Current</b>", use_markup=True, xalign=0), 2, 0, 1, 1)
-        grid.attach(Gtk.Label(label="<b>Fetched</b>", use_markup=True, xalign=0), 3, 0, 1, 1)
+        grid.attach(
+            Gtk.Label(label="<b>Field</b>", use_markup=True, xalign=1), 1, 0, 1, 1
+        )
+        grid.attach(
+            Gtk.Label(label="<b>Current</b>", use_markup=True, xalign=0), 2, 0, 1, 1
+        )
+        grid.attach(
+            Gtk.Label(label="<b>Fetched</b>", use_markup=True, xalign=0), 3, 0, 1, 1
+        )
 
         fields = [
             ("title", "Title"),
             ("author", "Author"),
             ("publisher", "Publisher"),
             ("date", "Date"),
-            ("isbn", "ISBN")
+            ("isbn", "ISBN"),
         ]
 
         for i, (key, label) in enumerate(fields, 1):
@@ -88,12 +100,20 @@ class MetadataDiffDialog(Gtk.Dialog):
 
             grid.attach(Gtk.Label(label=f"{label}:", xalign=1), 1, i, 1, 1)
 
-            grid.attach(Gtk.Label(label=curr_val, xalign=0, ellipsize=3, max_width_chars=35), 2, i, 1, 1)
+            grid.attach(
+                Gtk.Label(label=curr_val, xalign=0, ellipsize=3, max_width_chars=35),
+                2,
+                i,
+                1,
+                1,
+            )
 
             fetch_lbl = Gtk.Label(xalign=0, ellipsize=3, max_width_chars=35)
             if is_diff:
                 escaped_val = GLib.markup_escape_text(fetch_val)
-                fetch_lbl.set_markup(f"<span foreground='blue'><b>{escaped_val}</b></span>")
+                fetch_lbl.set_markup(
+                    f"<span foreground='blue'><b>{escaped_val}</b></span>"
+                )
             else:
                 fetch_lbl.set_text(fetch_val)
             grid.attach(fetch_lbl, 3, i, 1, 1)
@@ -104,9 +124,11 @@ class MetadataDiffDialog(Gtk.Dialog):
         # Checkbox for cover
         cover_check = Gtk.CheckButton()
         # Auto-select if remote cover exists and is different or no current cover
-        is_cover_diff = remote_cover_data and (not current_cover_data or remote_cover_data != current_cover_data)
+        is_cover_diff = remote_cover_data and (
+            not current_cover_data or remote_cover_data != current_cover_data
+        )
         cover_check.set_active(is_cover_diff)
-        self.checks["_apply_cover"] = cover_check # Special key for cover
+        self.checks["_apply_cover"] = cover_check  # Special key for cover
         grid.attach(cover_check, 0, row_idx, 1, 1)
 
         grid.attach(Gtk.Label(label="Cover Preview:", xalign=1), 1, row_idx, 1, 1)
@@ -129,7 +151,11 @@ class MetadataDiffDialog(Gtk.Dialog):
 
     def get_selected_metadata(self):
         """Returns only the fetched metadata values that were checked."""
-        return {key: self.fetched_meta[key] for key, check in self.checks.items() if check.get_active()}
+        return {
+            key: self.fetched_meta[key]
+            for key, check in self.checks.items()
+            if check.get_active()
+        }
 
     def _get_image_widget(self, data):
         img = Gtk.Image()
@@ -151,7 +177,6 @@ class MetadataDiffDialog(Gtk.Dialog):
         return img
 
 
-
 class RenamePreviewDialog(Gtk.Dialog):
     def __init__(self, parent, renames):
         super().__init__(title="Confirm Batch Rename", transient_for=parent, modal=True)
@@ -162,7 +187,9 @@ class RenamePreviewDialog(Gtk.Dialog):
         content.set_border_width(12)
         content.set_spacing(10)
 
-        content.add(Gtk.Label(label=f"Review the following {len(renames)} changes:", xalign=0))
+        content.add(
+            Gtk.Label(label=f"Review the following {len(renames)} changes:", xalign=0)
+        )
 
         scrolled = Gtk.ScrolledWindow()
         scrolled.set_hexpand(True)
@@ -192,7 +219,7 @@ class Dialogs:
         dialog = Gtk.FileChooserDialog(
             title="Please choose Epub folder",
             transient_for=parent,
-            action=Gtk.FileChooserAction.SELECT_FOLDER
+            action=Gtk.FileChooserAction.SELECT_FOLDER,
         )
         dialog.add_buttons("_Cancel", Gtk.ResponseType.CANCEL)
         dialog.add_buttons("_Open", Gtk.ResponseType.OK)
@@ -207,7 +234,7 @@ class Dialogs:
         dialog = Gtk.FileChooserDialog(
             title="Select Cover Image",
             transient_for=parent,
-            action=Gtk.FileChooserAction.OPEN
+            action=Gtk.FileChooserAction.OPEN,
         )
         dialog.add_buttons("_Cancel", Gtk.ResponseType.CANCEL)
         dialog.add_buttons("_Open", Gtk.ResponseType.OK)
@@ -229,7 +256,8 @@ class Dialogs:
             transient_for=parent,
             message_type=Gtk.MessageType.ERROR,
             buttons=Gtk.ButtonsType.OK,
-            text=message)
+            text=message,
+        )
         dialog.run()
         dialog.destroy()
 
@@ -240,7 +268,8 @@ class Dialogs:
             title=title,
             message_type=Gtk.MessageType.QUESTION,
             buttons=Gtk.ButtonsType.YES_NO,
-            text=message)
+            text=message,
+        )
         response = dialog.run()
         dialog.destroy()
         return response == Gtk.ResponseType.YES
@@ -255,7 +284,13 @@ class Dialogs:
                 template = dialog.get_value()
                 provider = dialog.get_provider()
                 try:
-                    template.format(year="2024", title="Title", author="Author", publisher="Pub", date="Date")
+                    template.format(
+                        year="2024",
+                        title="Title",
+                        author="Author",
+                        publisher="Pub",
+                        date="Date",
+                    )
                     result = (template, provider)
                     break
                 except ValueError:
@@ -284,9 +319,13 @@ class Dialogs:
             except urllib.error.URLError:
                 pass
 
-        dialog = MetadataDiffDialog(parent, current_meta, fetched_meta, current_cover_data, remote_cover_data)
+        dialog = MetadataDiffDialog(
+            parent, current_meta, fetched_meta, current_cover_data, remote_cover_data
+        )
         response = dialog.run()
-        result = dialog.get_selected_metadata() if response == Gtk.ResponseType.OK else None
+        result = (
+            dialog.get_selected_metadata() if response == Gtk.ResponseType.OK else None
+        )
         dialog.destroy()
         return result
 
@@ -297,7 +336,8 @@ class Dialogs:
             title=title,
             message_type=Gtk.MessageType.QUESTION,
             buttons=Gtk.ButtonsType.OK_CANCEL,
-            text=label_text)
+            text=label_text,
+        )
 
         entry = Gtk.Entry()
         entry.set_text(default_text)

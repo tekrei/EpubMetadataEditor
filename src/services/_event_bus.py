@@ -5,6 +5,7 @@ from typing import Any
 
 class EventBus:
     """Simple event bus to decouple UI components."""
+
     def __init__(self):
         self._subscribers = defaultdict(set)
 

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import gi
 
-gi.require_version('Gtk', '3.0')
+gi.require_version("Gtk", "3.0")
 from gi.repository import GdkPixbuf, GLib
 
 from data import AppEvent
@@ -16,6 +16,7 @@ from services import BookError, FileService
 from ._dialogs import Dialogs
 
 logger = logging.getLogger(__name__)
+
 
 class BookDetailsView:
     def __init__(self, builder, config_manager, book_service, event_bus):
@@ -28,7 +29,7 @@ class BookDetailsView:
             "author": builder.get_object("entAuthor"),
             "publisher": builder.get_object("entPublisher"),
             "date": builder.get_object("entDate"),
-            "isbn": builder.get_object("entISBN")
+            "isbn": builder.get_object("entISBN"),
         }
         self.img_cover = builder.get_object("imgCover")
         self.btn_open = builder.get_object("btnOpenEpub")
@@ -39,7 +40,9 @@ class BookDetailsView:
         self.current_path = None
 
         self.event_bus.subscribe(AppEvent.SELECTION_CHANGED, self.update)
-        self.event_bus.subscribe(AppEvent.FOCUS_DETAILS, lambda _: self.fields["title"].grab_focus())
+        self.event_bus.subscribe(
+            AppEvent.FOCUS_DETAILS, lambda _: self.fields["title"].grab_focus()
+        )
 
     def get_handlers(self):
         return {
@@ -90,7 +93,8 @@ class BookDetailsView:
                 w = pb.get_width()
                 scale = 200 / h
                 scaled = pb.scale_simple(
-                    int(w * scale), 200, GdkPixbuf.InterpType.BILINEAR)
+                    int(w * scale), 200, GdkPixbuf.InterpType.BILINEAR
+                )
                 self.img_cover.set_from_pixbuf(scaled)
             except GLib.Error as e:
                 logger.error(f"Cover render error: {e}")
@@ -103,7 +107,9 @@ class BookDetailsView:
             self.book_service.update_metadata(self.current_path, meta)
             return meta
         except BookError as e:
-            Dialogs.show_error_message(self.builder.get_object("mainWindow"), f"Update failed: {e}")
+            Dialogs.show_error_message(
+                self.builder.get_object("mainWindow"), f"Update failed: {e}"
+            )
             return None
 
     def on_open_epub(self):
@@ -127,7 +133,9 @@ class BookDetailsView:
         """Initiates fetching metadata from the web in a background thread."""
         isbn = self.fields["isbn"].get_text()
         if not isbn:
-            Dialogs.show_error_message(self.builder.get_object("mainWindow"), "Please enter an ISBN first.")
+            Dialogs.show_error_message(
+                self.builder.get_object("mainWindow"), "Please enter an ISBN first."
+            )
             return
 
         provider = self.config_manager.get("metadata_provider", "google")
@@ -143,7 +151,9 @@ class BookDetailsView:
             except BookError as e:
                 GLib.idle_add(self._on_metadata_fetch_complete, None, str(e))
             except (urllib.error.URLError, json.JSONDecodeError) as e:
-                GLib.idle_add(self._on_metadata_fetch_complete, None, f"Unexpected error: {e}")
+                GLib.idle_add(
+                    self._on_metadata_fetch_complete, None, f"Unexpected error: {e}"
+                )
 
         threading.Thread(target=do_fetch, daemon=True).start()
 
@@ -154,22 +164,33 @@ class BookDetailsView:
         self.btn_fetch.set_sensitive(True)
 
         if error_msg:
-            Dialogs.show_error_message(self.builder.get_object("mainWindow"), f"Error fetching metadata: {error_msg}")
+            Dialogs.show_error_message(
+                self.builder.get_object("mainWindow"),
+                f"Error fetching metadata: {error_msg}",
+            )
             return
 
         if not results:
             provider = self.config_manager.get("metadata_provider", "google")
-            Dialogs.show_error_message(self.builder.get_object("mainWindow"), f"No metadata found via {provider.title()}.")
+            Dialogs.show_error_message(
+                self.builder.get_object("mainWindow"),
+                f"No metadata found via {provider.title()}.",
+            )
             return
 
         current_meta = {k: v.get_text() for k, v in self.fields.items()}
         current_cover_data = self.book_service.get_cover(self.current_path)
 
-        applied_meta = Dialogs.show_metadata_diff(self.builder.get_object("mainWindow"), current_meta, results, current_cover_data)
+        applied_meta = Dialogs.show_metadata_diff(
+            self.builder.get_object("mainWindow"),
+            current_meta,
+            results,
+            current_cover_data,
+        )
 
         if applied_meta:
             for key, value in applied_meta.items():
-                if key != "_apply_cover": # Special key for cover
+                if key != "_apply_cover":  # Special key for cover
                     self.fields[key].set_text(value)
 
             if applied_meta.get("_apply_cover"):
@@ -177,7 +198,9 @@ class BookDetailsView:
                 if cover_url:
                     self._start_cover_download(cover_url)
                 else:
-                    self.event_bus.emit(AppEvent.STATUS_MESSAGE, "No remote cover URL available.")
+                    self.event_bus.emit(
+                        AppEvent.STATUS_MESSAGE, "No remote cover URL available."
+                    )
 
     def _start_cover_download(self, url):
         """Initiates downloading and applying the cover in a background thread."""
@@ -199,6 +222,7 @@ class BookDetailsView:
                 GLib.idle_add(self._on_cover_download_complete, None)
             except (urllib.error.URLError, OSError) as e:
                 GLib.idle_add(self._on_cover_download_complete, str(e))
+
         threading.Thread(target=do_download, daemon=True).start()
 
     def _on_cover_download_complete(self, error_msg):
@@ -211,7 +235,10 @@ class BookDetailsView:
 
         if error_msg:
             logger.error(f"Failed to download remote cover: {error_msg}")
-            Dialogs.show_error_message(self.builder.get_object("mainWindow"), f"Failed to download cover image: {error_msg}")
+            Dialogs.show_error_message(
+                self.builder.get_object("mainWindow"),
+                f"Failed to download cover image: {error_msg}",
+            )
         else:
             self._load_cover()
             self.event_bus.emit(AppEvent.STATUS_MESSAGE, "Cover updated from web.")

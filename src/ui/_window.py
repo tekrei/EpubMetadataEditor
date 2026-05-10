@@ -1,6 +1,6 @@
 import gi
 
-gi.require_version('Gtk', '3.0')
+gi.require_version("Gtk", "3.0")
 import logging
 import signal
 from pathlib import Path
@@ -21,6 +21,7 @@ ASSET_PATH = Path(__file__).parent.parent.resolve()
 CONFIG_DIR = Path.home() / ".config" / "epub-metadata-editor"
 CONFIG_FILE = CONFIG_DIR / "settings.json"
 
+
 class MainWindowGTK:
     def __init__(self):
         # Initialize Services
@@ -35,8 +36,12 @@ class MainWindowGTK:
         self.statusbar = self.builder.get_object("statusbar")
 
         # Initialize Components with DI
-        self.book_list = BookListView(self.builder, self.config_manager, self.book_service, self.event_bus)
-        self.book_details = BookDetailsView(self.builder, self.config_manager, self.book_service, self.event_bus)
+        self.book_list = BookListView(
+            self.builder, self.config_manager, self.book_service, self.event_bus
+        )
+        self.book_details = BookDetailsView(
+            self.builder, self.config_manager, self.book_service, self.event_bus
+        )
         self.toolbar = ToolbarView(self.builder, self.event_bus)
 
         self._setup_event_subscriptions()
@@ -52,12 +57,20 @@ class MainWindowGTK:
         """Wires up the event bus subscriptions."""
         self.event_bus.subscribe(AppEvent.REQUEST_APP_QUIT, self.quit_window)
         self.event_bus.subscribe(AppEvent.REQUEST_LIST_CLEAR, self.book_list.clear)
-        self.event_bus.subscribe(AppEvent.REQUEST_FOLDER_OPEN, self.book_list.open_folder_dialog)
+        self.event_bus.subscribe(
+            AppEvent.REQUEST_FOLDER_OPEN, self.book_list.open_folder_dialog
+        )
         self.event_bus.subscribe(AppEvent.REQUEST_LIST_REFRESH, self.book_list.refresh)
-        self.event_bus.subscribe(AppEvent.REQUEST_LIST_SELECT_ALL, self.book_list.select_all)
-        self.event_bus.subscribe(AppEvent.REQUEST_LIST_DESELECT_ALL, self.book_list.unselect_all)
+        self.event_bus.subscribe(
+            AppEvent.REQUEST_LIST_SELECT_ALL, self.book_list.select_all
+        )
+        self.event_bus.subscribe(
+            AppEvent.REQUEST_LIST_DESELECT_ALL, self.book_list.unselect_all
+        )
         self.event_bus.subscribe(AppEvent.REQUEST_SHOW_SETTINGS, self.on_settings)
-        self.event_bus.subscribe(AppEvent.REQUEST_SHOW_ABOUT, lambda _: Dialogs.show_about(self.window))
+        self.event_bus.subscribe(
+            AppEvent.REQUEST_SHOW_ABOUT, lambda _: Dialogs.show_about(self.window)
+        )
         self.event_bus.subscribe(AppEvent.STATUS_MESSAGE, self.push_status)
 
     def _get_signal_handlers(self):
@@ -75,17 +88,24 @@ class MainWindowGTK:
         """Save current window settings."""
         size = self.window.get_size()
         pos = self.window.get_position()
-        self.config_manager.save({
-            "width": size[0],
-            "height": size[1],
-            "x": pos[0],
-            "y": pos[1],
-            "maximized": self.window.is_maximized()
-        })
+        self.config_manager.save(
+            {
+                "width": size[0],
+                "height": size[1],
+                "x": pos[0],
+                "y": pos[1],
+                "maximized": self.window.is_maximized(),
+            }
+        )
 
     def _set_sensible_default_size(self):
-        self.window.set_default_size(self.config_manager.get("width", 1024), self.config_manager.get("height", 768))
-        self.window.move(self.config_manager.get("x", 0), self.config_manager.get("y", 0))
+        self.window.set_default_size(
+            self.config_manager.get("width", 1024),
+            self.config_manager.get("height", 768),
+        )
+        self.window.move(
+            self.config_manager.get("x", 0), self.config_manager.get("y", 0)
+        )
         if self.config_manager.get("maximized"):
             self.window.maximize()
 
@@ -99,16 +119,26 @@ class MainWindowGTK:
         if event.keyval == Gdk.KEY_F5:
             self.book_list.refresh()
             return True
-        if (event.state & Gdk.ModifierType.CONTROL_MASK) and event.keyval == Gdk.KEY_a and not isinstance(self.window.get_focus(), Gtk.Entry): # SIM102
+        if (
+            (event.state & Gdk.ModifierType.CONTROL_MASK)
+            and event.keyval == Gdk.KEY_a
+            and not isinstance(self.window.get_focus(), Gtk.Entry)
+        ):  # SIM102
             self.book_list.select_all()
             return True
-        if (event.state & Gdk.ModifierType.CONTROL_MASK) and (event.state & Gdk.ModifierType.SHIFT_MASK) and event.keyval == Gdk.KEY_A:
+        if (
+            (event.state & Gdk.ModifierType.CONTROL_MASK)
+            and (event.state & Gdk.ModifierType.SHIFT_MASK)
+            and event.keyval == Gdk.KEY_A
+        ):
             self.book_list.unselect_all()
             return True
         return False
 
     def on_settings(self, _=None):
-        current_template = self.config_manager.get("naming_template", "{year} - {title} ({author})")
+        current_template = self.config_manager.get(
+            "naming_template", "{year} - {title} ({author})"
+        )
         current_provider = self.config_manager.get("metadata_provider", "google")
         result = Dialogs.show_settings(self.window, current_template, current_provider)
         if result is not None:
