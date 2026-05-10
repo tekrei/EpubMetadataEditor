@@ -1,43 +1,50 @@
 # A simple Epub Metadata Editor
 
-Just a simple Epub Metadata editor for learning [GTK](https://www.gtk.org/) in Python.
+A lightweight tool for viewing and editing EPUB metadata, built as a learning project for [GTK](https://www.gtk.org/) with Python.
+
+## Features
+
+- View and edit EPUB2/EPUB3 metadata (Title, Author, etc.).
+- Efficient manipulation using `zipfile` and `lxml` instead of full re-writes.
+- Built with modern Python tooling (`uv`, `hatch`).
+- Recursive directory scanning for EPUB files.
+- Native GTK3 interface.
 
 ## Libraries
 
-- This project is using [uv](https://docs.astral.sh/uv/getting-started/) and dependencies are defined in [pyproject.toml](./pyproject.toml) file.
-- It is developed using Python and [PyGobject](https://pygobject.readthedocs.io/en/latest/index.html).
-- Using [ebooklib](https://github.com/aerkalov/ebooklib) for handle EPUB2/EPUB3 format.
+- **Package Manager:** uv
+- **UI Framework:** PyGObject (GTK3)
+- **XML Processing:** `lxml`
+- **Archive Handling:** Built-in `zipfile`
 
-## Running
+## Installation & Setup
 
-It is tested only in GNU/Linux operating system.
+This project is primarily tested on GNU/Linux.
 
-- Install dependencies:
-  1. [install the following packages using package manager](https://pygobject.readthedocs.io/en/latest/getting_started.html#ubuntu-getting-started): `sudo apt get install libcairo2-dev libgirepository-2.0-dev pkg-config gcc python3-dev gir1.2-gtk-3.0`
-  2. install remaining dependencies: `uv lock && uv sync`
-  3. You can also directly run using: `uv run python main.py`
+### 1. System Dependencies (Ubuntu/Debian)
+
+```bash
+sudo apt update && sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0 gobject-introspection libgirepository-2.0-dev appmenu-gtk3-module libcanberra-gtk3-module
+```
+
+### 2. Python Dependencies
+
+Using `uv` to manage the virtual environment and dependencies:
+
+```bash
+uv sync
+```
+
+## Running the Application
+
+- **Standard Run:** `uv run epub-editor`
+- **Development Run:** `uv run python -m epub_metadata_editor.main`
 
 ## Possible improvements
 
-- If it is possible: just updating the metadata of the file instead of reading the epub file, changing the metadata and writing the file again
+- Add unit tests for metadata extraction logic
 - Updating all metadata of selected book using a form instead of updating each metadata value separately
-- Recursively finding and listing all epub files of the selected folder
 
-## LICENSE
+## License
 
-This program is free software: you can redistribute them and/or modify them under the terms of the [GNU General Public License](https://www.gnu.org/licenses/gpl-3.0.en.html) as published by the [Free Software Foundation](https://www.fsf.org), either version 3 of the License, or any later version.
-
-It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the [GNU General Public License](./LICENSE) for more details.
-
-## Package management
-
-We are using [uv](https://docs.astral.sh/uv/getting-started/) Python package and dependency
-manager.
-
-- Init interactively `uv init`
-- Add package `uv add package-name`
-- Remove package `uv remove package-name`
-- Create lockfile `uv lock`
-- Update dependencies `uv sync`
-- Show available packages `uv show`
-- Run a command in the virtualenv `uv run command`
+This project is licensed under the Apache License 2.0. See the LICENSE file for details.
