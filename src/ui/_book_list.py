@@ -1,14 +1,16 @@
-from pathlib import Path
-import threading
 import logging
+import threading
+from pathlib import Path
+
 import gi
+
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib, Gdk
+from gi.repository import Gdk, GLib, Gtk
 
 from data import AppEvent
-from ._dialogs import Dialogs
-from services import FileService
+from services import BookError, FileService
 
+from ._dialogs import Dialogs
 
 logger = logging.getLogger(__name__)
 
@@ -24,11 +26,11 @@ class BookListView:
         self.rows_data = {} # Map of row widget to metadata
         self.expanded_folders = set() # Set of relative path strings
         self.last_selected_row = None # Anchor for range selection
-        
+
         self.list_box = builder.get_object("lstBooks")
         self.search_entry = builder.get_object("searchEntry")
         self.progressbar = builder.get_object("progressbar")
-        
+
         self.list_box.set_selection_mode(Gtk.SelectionMode.MULTIPLE)
         self.list_box.set_filter_func(self.filter_func)
         self.list_box.set_sort_func(self.sort_func)
@@ -52,7 +54,7 @@ class BookListView:
                 self.expanded_folders.remove(rel_path)
             else:
                 self.expanded_folders.add(rel_path)
-            
+
             self._update_row_widget(row)
             self.list_box.invalidate_filter()
         else:
@@ -70,17 +72,14 @@ class BookListView:
             return query in text_to_search
 
         # 2. Expansion Logic: Hide if any ancestor folder is not expanded
-        if self._is_ancestor_collapsed(meta):
-            return False
-
-        return True
+        return not self._is_ancestor_collapsed(meta)
 
     def sort_func(self, row1, row2):
         meta1 = self.rows_data.get(row1)
         meta2 = self.rows_data.get(row2)
         if not meta1 or not meta2:
             return 0
-        
+
         # Sort by full path to maintain the folder structure in the flat list
         p1 = meta1['path'].lower()
         p2 = meta2['path'].lower()
@@ -99,7 +98,7 @@ class BookListView:
                     idx1 = all_rows.index(self.last_selected_row)
                     idx2 = all_rows.index(row)
                     start, end = (idx1, idx2) if idx1 < idx2 else (idx2, idx1)
-                    
+
                     listbox.unselect_all()
                     for i in range(start, end + 1):
                         child = all_rows[i]
@@ -120,7 +119,7 @@ class BookListView:
             meta = self.rows_data.get(row)
             if meta and meta['is_folder']:
                 self.on_row_activated(listbox, row)
-            
+
             listbox.unselect_all()
             listbox.select_row(row)
             self.last_selected_row = row
@@ -134,7 +133,7 @@ class BookListView:
                 if row not in self.list_box.get_selected_rows():
                     self.list_box.unselect_all()
                     self.list_box.select_row(row)
-                
+
                 meta = self.rows_data.get(row)
                 if meta:
                     self._show_context_menu(event, row)
@@ -161,14 +160,14 @@ class BookListView:
         old_path = Path(meta['path'])
         # Using refactored Dialogs
         new_name = Dialogs.get_text_input(self.builder.get_object("mainWindow"), "Rename File", "New filename:", old_path.name)
-        
+
         if new_name and new_name != old_path.name:
             try:
                 new_path = FileService.rename(old_path, new_name)
                 meta['name'] = new_name
                 meta['path'] = str(new_path)
                 self._update_row_widget(row)
-            except Exception as e:
+            except OSError as e:
                 Dialogs.show_error_message(self.builder.get_object("mainWindow"), str(e))
                 logger.error(f"Rename error: {e}")
 
@@ -179,10 +178,11 @@ class BookListView:
 
         for row in selected_rows:
             meta = self.rows_data.get(row)
-            if not meta or meta['is_folder']: continue
-            
+            if not meta or meta['is_folder']:
+                continue
+
             old_path = Path(meta['path'])
-            
+
             n_name = self.book_service.format_filename(template, meta)
             if n_name and old_path.name != n_name:
                 changes.append((old_path, n_name, row))
@@ -196,7 +196,8 @@ class BookListView:
                     meta['name'] = n_name
                     meta['path'] = str(new_path)
                     self._update_row_widget(row)
-                except Exception: continue
+                except OSError:
+                    continue
             self.event_bus.emit(AppEvent.STATUS_MESSAGE, "Batch rename complete.")
 
     def on_delete_files(self):
@@ -204,16 +205,18 @@ class BookListView:
         parent = self.builder.get_object("mainWindow")
         if not selected_rows or not Dialogs.ask_confirmation(parent, "Delete", f"Trash {len(selected_rows)} item(s)?"):
             return
-            
+
         for row in selected_rows:
             meta = self.rows_data.get(row)
-            if not meta or meta['is_folder']: continue
+            if not meta or meta['is_folder']:
+                continue
             try:
                 FileService.trash(meta['path'])
                 self.list_box.remove(row)
                 del self.rows_data[row]
-            except Exception as e:
-                logger.error(f"Trash error: {e}"); self.event_bus.emit(AppEvent.STATUS_MESSAGE, f"Failed to trash {meta['name']}")
+            except OSError as e:
+                logger.error(f"Trash error: {e}")
+                self.event_bus.emit(AppEvent.STATUS_MESSAGE, f"Failed to trash {meta['name']}")
 
     def _on_open_containing_folder(self, row):
         meta = self.rows_data.get(row)
@@ -227,12 +230,13 @@ class BookListView:
             self.refresh()
 
     def refresh(self, _=None):
-        if not self.folder: return
+        if not self.folder: # E701
+            return
         self.clear()
         self.folder_rows = {}
         self.rows_data = {}
         self.expanded_folders = set()
-        
+
         def run_scan():
             epubs = self.book_service.find_books(self.folder)
             GLib.idle_add(self._start_loading, epubs)
@@ -252,14 +256,14 @@ class BookListView:
         """Recursively ensures rows for parent folders exist."""
         if not relative_path.parts:
             return
-            
+
         path_str = str(relative_path)
         if path_str in self.folder_rows:
             return
-            
+
         # Ensure the parent of this folder exists first
         self._get_or_create_folder_row(relative_path.parent)
-        
+
         meta = {
             'name': relative_path.name,
             'title': '',
@@ -268,7 +272,7 @@ class BookListView:
             'is_folder': True,
             'depth': len(relative_path.parts) - 1
         }
-        
+
         row = self._create_row_widget(meta)
         self.rows_data[row] = meta
         self.folder_rows[path_str] = row
@@ -277,25 +281,25 @@ class BookListView:
     def _create_row_widget(self, meta):
         """Creates a simple horizontal box for the ListBox row."""
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        
+
         # Add indentation based on nesting depth
         depth = meta.get('depth', 0)
         box.set_margin_start(10 + (depth * 20))
-        
+
         box.set_margin_end(10)
         box.set_margin_top(5)
         box.set_margin_bottom(5)
-        
+
         if meta['is_folder']:
             rel_path = str(Path(meta['path']).relative_to(self.folder))
             is_expanded = rel_path in self.expanded_folders
             icon_name = "pan-down-symbolic" if is_expanded else "pan-end-symbolic"
         else:
             icon_name = "text-x-generic"
-            
+
         img = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.MENU)
         box.pack_start(img, False, False, 0)
-        
+
         lbl_name = Gtk.Label(label=meta['name'])
         lbl_name.set_ellipsize(3) # Pango.EllipsizeMode.END
         box.pack_start(lbl_name, False, False, 0)
@@ -340,7 +344,7 @@ class BookListView:
                 rel_path = epub_file.relative_to(self.folder)
                 # Ensure folders leading to this file are in the list
                 self._get_or_create_folder_row(rel_path.parent)
-                
+
                 meta = self.book_service.get_metadata(epub_file)
                 meta['name'] = epub_file.name
                 meta['is_folder'] = False
@@ -349,7 +353,7 @@ class BookListView:
                 row = self._create_row_widget(meta)
                 self.rows_data[row] = meta
                 self.list_box.add(row)
-            except Exception as e:
+            except BookError as e:
                 logger.error(f"Failed to load {epub_file.name}: {e}")
 
             self.progressbar.set_fraction((i + 1) / total) # Update progress bar
@@ -367,7 +371,8 @@ class BookListView:
             return None
         row = selected[0]
         meta = self.rows_data.get(row)
-        if not meta or meta['is_folder']: return None
+        if not meta or meta['is_folder']:
+            return None
         return meta
 
     def update_selected_metadata(self, metadata: dict):

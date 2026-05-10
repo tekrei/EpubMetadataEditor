@@ -1,12 +1,13 @@
 import urllib.request
-from gi.repository import Gtk, GLib, GdkPixbuf
+
+from gi.repository import GdkPixbuf, GLib, Gtk
 
 
 class SettingsDialog(Gtk.Dialog):
     def __init__(self, parent, current_template, current_provider):
         super().__init__(title="Settings", transient_for=parent, modal=True)
         self.add_buttons("_Cancel", Gtk.ResponseType.CANCEL, "_OK", Gtk.ResponseType.OK)
-        
+
         content = self.get_content_area()
         content.set_spacing(10)
         content.set_border_width(12)
@@ -86,9 +87,9 @@ class MetadataDiffDialog(Gtk.Dialog):
             grid.attach(check, 0, i, 1, 1)
 
             grid.attach(Gtk.Label(label=f"{label}:", xalign=1), 1, i, 1, 1)
-            
+
             grid.attach(Gtk.Label(label=curr_val, xalign=0, ellipsize=3, max_width_chars=35), 2, i, 1, 1)
-            
+
             fetch_lbl = Gtk.Label(xalign=0, ellipsize=3, max_width_chars=35)
             if is_diff:
                 escaped_val = GLib.markup_escape_text(fetch_val)
@@ -99,7 +100,7 @@ class MetadataDiffDialog(Gtk.Dialog):
 
         # Add Cover Preview Row
         row_idx = len(fields) + 1
-        
+
         # Checkbox for cover
         cover_check = Gtk.CheckButton()
         # Auto-select if remote cover exists and is different or no current cover
@@ -145,7 +146,7 @@ class MetadataDiffDialog(Gtk.Dialog):
             scale = 120 / h
             scaled = pb.scale_simple(int(w * scale), 120, GdkPixbuf.InterpType.BILINEAR)
             img.set_from_pixbuf(scaled)
-        except Exception:
+        except GLib.Error:
             img.set_from_icon_name("image-missing", Gtk.IconSize.DIALOG)
         return img
 
@@ -160,13 +161,13 @@ class RenamePreviewDialog(Gtk.Dialog):
         content = self.get_content_area()
         content.set_border_width(12)
         content.set_spacing(10)
-        
+
         content.add(Gtk.Label(label=f"Review the following {len(renames)} changes:", xalign=0))
 
         scrolled = Gtk.ScrolledWindow()
         scrolled.set_hexpand(True)
         scrolled.set_vexpand(True)
-        
+
         ls = Gtk.ListStore(str, str)
         for old, new in renames:
             ls.append([old, new])
@@ -177,7 +178,7 @@ class RenamePreviewDialog(Gtk.Dialog):
             col = Gtk.TreeViewColumn(title, res, text=i)
             col.set_resizable(True)
             tv.append_column(col)
-        
+
         scrolled.add(tv)
         content.add(scrolled)
         content.show_all()
@@ -195,7 +196,7 @@ class Dialogs:
         )
         dialog.add_buttons("_Cancel", Gtk.ResponseType.CANCEL)
         dialog.add_buttons("_Open", Gtk.ResponseType.OK)
-        
+
         response = dialog.run()
         folder = dialog.get_filename() if response == Gtk.ResponseType.OK else None
         dialog.destroy()
@@ -210,10 +211,11 @@ class Dialogs:
         )
         dialog.add_buttons("_Cancel", Gtk.ResponseType.CANCEL)
         dialog.add_buttons("_Open", Gtk.ResponseType.OK)
-        
+
         filter_img = Gtk.FileFilter()
         filter_img.set_name("Images")
-        for mt in ["image/jpeg", "image/png"]: filter_img.add_mime_type(mt)
+        for mt in ["image/jpeg", "image/png"]:
+            filter_img.add_mime_type(mt)
         dialog.add_filter(filter_img)
 
         response = dialog.run()
@@ -256,7 +258,7 @@ class Dialogs:
                     template.format(year="2024", title="Title", author="Author", publisher="Pub", date="Date")
                     result = (template, provider)
                     break
-                except Exception:
+                except ValueError:
                     Dialogs.show_error_message(dialog, "Invalid Template format.")
             else:
                 break
@@ -279,7 +281,7 @@ class Dialogs:
             try:
                 with urllib.request.urlopen(url, timeout=5) as resp:
                     remote_cover_data = resp.read()
-            except Exception:
+            except urllib.error.URLError:
                 pass
 
         dialog = MetadataDiffDialog(parent, current_meta, fetched_meta, current_cover_data, remote_cover_data)
@@ -296,12 +298,12 @@ class Dialogs:
             message_type=Gtk.MessageType.QUESTION,
             buttons=Gtk.ButtonsType.OK_CANCEL,
             text=label_text)
-        
+
         entry = Gtk.Entry()
         entry.set_text(default_text)
         entry.show()
         dialog.get_content_area().pack_end(entry, True, True, 0)
-        
+
         response = dialog.run()
         text = entry.get_text() if response == Gtk.ResponseType.OK else None
         dialog.destroy()

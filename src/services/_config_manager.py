@@ -13,9 +13,9 @@ class ConfigManager:
     def _load(self):
         if self.config_file.exists():
             try:
-                with open(self.config_file, 'r') as f:
+                with open(self.config_file) as f:
                     return json.load(f)
-            except Exception as e:
+            except (OSError, json.JSONDecodeError) as e:
                 logger.error(f"Failed to load config: {e}")
         return {}
 
@@ -27,7 +27,7 @@ class ConfigManager:
             self.config_dir.mkdir(parents=True, exist_ok=True)
             with open(self.config_file, 'w') as f:
                 json.dump(self.data, f)
-        except Exception as e:
+        except OSError as e:
             logger.error(f"Failed to save config: {e}")
 
     def get(self, key, default=None):

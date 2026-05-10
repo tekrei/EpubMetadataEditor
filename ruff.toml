@@ -1,0 +1,27 @@
+# Target version for code generation/fixes
+target-version = "py312"
+line-length = 88
+
+[lint]
+# Enable rules:
+# E: pycodestyle errors
+# W: pycodestyle warnings
+# F: Pyflakes (standard errors)
+# I: isort (import sorting)
+# B: flake8-bugbear (common design bugs)
+# UP: pyupgrade (modernize Python syntax)
+# RUF: Ruff-specific rules
+# BLE: blind-except
+# SIM: flake8-simplify
+select = ["E", "W", "F", "I", "B", "UP", "RUF", "BLE", "SIM"]
+
+# E501: Line length (handled by formatter)
+# E402: Module level import not at top (conflicts with GTK's gi.require_version)
+ignore = ["E501", "E402"]
+
+[lint.isort]
+known-first-party = ["services", "ui", "data"]
+
+[format]
+quote-style = "double"
+indent-style = "space"

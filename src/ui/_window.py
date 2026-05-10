@@ -1,16 +1,19 @@
 import gi
+
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib, Gdk # noqa
-from pathlib import Path
-import signal
 import logging
+import signal
+from pathlib import Path
+
+from gi.repository import Gdk, GLib, Gtk
 
 from data import AppEvent
-from ._book_list import BookListView
+from services import BookService, ConfigManager, EventBus
+
 from ._book_details import BookDetailsView
-from ._toolbar import ToolbarView
+from ._book_list import BookListView
 from ._dialogs import Dialogs
-from services import ConfigManager, BookService, EventBus
+from ._toolbar import ToolbarView
 
 logger = logging.getLogger(__name__)
 
@@ -37,10 +40,10 @@ class MainWindowGTK:
         self.toolbar = ToolbarView(self.builder, self.event_bus)
 
         self._setup_event_subscriptions()
-        
+
         handlers = self._get_signal_handlers()
         self.builder.connect_signals(handlers)
-        
+
         self._set_sensible_default_size()
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit)
         self.window.connect("key-press-event", self.on_window_key_press)
@@ -96,10 +99,9 @@ class MainWindowGTK:
         if event.keyval == Gdk.KEY_F5:
             self.book_list.refresh()
             return True
-        if (event.state & Gdk.ModifierType.CONTROL_MASK) and event.keyval == Gdk.KEY_a:
-            if not isinstance(self.window.get_focus(), Gtk.Entry):
-                self.book_list.select_all()
-                return True
+        if (event.state & Gdk.ModifierType.CONTROL_MASK) and event.keyval == Gdk.KEY_a and not isinstance(self.window.get_focus(), Gtk.Entry): # SIM102
+            self.book_list.select_all()
+            return True
         if (event.state & Gdk.ModifierType.CONTROL_MASK) and (event.state & Gdk.ModifierType.SHIFT_MASK) and event.keyval == Gdk.KEY_A:
             self.book_list.unselect_all()
             return True

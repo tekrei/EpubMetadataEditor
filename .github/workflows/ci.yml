@@ -22,7 +22,10 @@ jobs:
             pkg-config \
             python3-dev \
             gir1.2-gtk-3.0 \
-            gobject-introspection
+            gobject-introspection \
+            libgirepository-2.0-dev \
+            appmenu-gtk3-module \
+            libcanberra-gtk3-module
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -34,6 +37,12 @@ jobs:
 
       - name: Install dependencies
         run: uv sync --all-extras --dev
+
+      - name: Lint with ruff
+        run: uv run ruff check .
+
+      - name: Check formatting with ruff
+        run: uv run ruff format --check .
 
       - name: Build check
         run: uv build

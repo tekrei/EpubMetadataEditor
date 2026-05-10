@@ -49,6 +49,7 @@ uv sync
 
 - Add unit tests for metadata extraction and ISBN detection logic.
 - Implement a persistent SQLite cache for faster library loading.
+- Migrate to [GTK 4.0](https://docs.gtk.org/gtk4/).
 
 ## License
 

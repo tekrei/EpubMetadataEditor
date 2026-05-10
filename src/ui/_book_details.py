@@ -1,15 +1,19 @@
+import json
 import logging
-import urllib.request
-import threading
 import tempfile
+import threading
+import urllib.request
 from pathlib import Path
+
 import gi
+
 gi.require_version('Gtk', '3.0')
 from gi.repository import GdkPixbuf, GLib
 
 from data import AppEvent
+from services import BookError, FileService
+
 from ._dialogs import Dialogs
-from services import FileService, BookError
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +92,7 @@ class BookDetailsView:
                 scaled = pb.scale_simple(
                     int(w * scale), 200, GdkPixbuf.InterpType.BILINEAR)
                 self.img_cover.set_from_pixbuf(scaled)
-            except Exception as e:
+            except GLib.Error as e:
                 logger.error(f"Cover render error: {e}")
 
     def on_save(self):
@@ -127,7 +131,7 @@ class BookDetailsView:
             return
 
         provider = self.config_manager.get("metadata_provider", "google")
-        
+
         self.btn_fetch.set_sensitive(False)
         self.spin_fetch.show()
         self.spin_fetch.start()
@@ -138,7 +142,7 @@ class BookDetailsView:
                 GLib.idle_add(self._on_metadata_fetch_complete, results, None)
             except BookError as e:
                 GLib.idle_add(self._on_metadata_fetch_complete, None, str(e))
-            except Exception as e:
+            except (urllib.error.URLError, json.JSONDecodeError) as e:
                 GLib.idle_add(self._on_metadata_fetch_complete, None, f"Unexpected error: {e}")
 
         threading.Thread(target=do_fetch, daemon=True).start()
@@ -160,9 +164,9 @@ class BookDetailsView:
 
         current_meta = {k: v.get_text() for k, v in self.fields.items()}
         current_cover_data = self.book_service.get_cover(self.current_path)
-        
+
         applied_meta = Dialogs.show_metadata_diff(self.builder.get_object("mainWindow"), current_meta, results, current_cover_data)
-        
+
         if applied_meta:
             for key, value in applied_meta.items():
                 if key != "_apply_cover": # Special key for cover
@@ -190,9 +194,10 @@ class BookDetailsView:
 
                 urllib.request.urlretrieve(url, temp_path)
                 self.book_service.update_cover(self.current_path, str(temp_path))
-                if temp_path.exists(): temp_path.unlink()
+                if temp_path.exists():
+                    temp_path.unlink()
                 GLib.idle_add(self._on_cover_download_complete, None)
-            except Exception as e:
+            except (urllib.error.URLError, OSError) as e:
                 GLib.idle_add(self._on_cover_download_complete, str(e))
         threading.Thread(target=do_download, daemon=True).start()
 

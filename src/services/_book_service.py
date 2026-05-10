@@ -1,13 +1,15 @@
-import zipfile
-import os
-import logging
 import json
-import urllib.request
+import logging
+import os
 import urllib.error
+import urllib.request
+import zipfile
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Union
+
 from lxml import etree
+
 from data import NAMESPACES
+
 from ._file_service import FileService
 
 logger = logging.getLogger(__name__)
@@ -26,42 +28,42 @@ class NetworkError(BookError):
 
 class BookService:
     """Service for handling EPUB-specific business logic."""
-    
-    def find_books(self, directory: Union[str, Path], recursive: bool = True) -> List[Path]:
+
+    def find_books(self, directory: str | Path, recursive: bool = True) -> list[Path]:
         """Finds EPUB files in the given directory."""
         return FileService.find_files(directory, "*.epub", recursive)
 
-    def get_metadata(self, path: Union[str, Path]) -> Dict[str, Any]:
+    def get_metadata(self, path: str | Path) -> dict[str, any]:
         """Extract basic metadata from an EPUB file efficiently."""
         path = Path(path)
         metadata = {'title': 'Unknown Title', 'author': 'Unknown Author', 'publisher': '', 'date': '', 'isbn': '', 'path': str(path)}
         try:
             with zipfile.ZipFile(path, 'r') as zin:
-                rootfile_path, opf_tree = self._get_opf_info(zin)
+                _, opf_tree = self._get_opf_info(zin)
 
                 title_elem = opf_tree.find('.//dc:title', namespaces=NAMESPACES)
                 author_elem = opf_tree.find('.//dc:creator', namespaces=NAMESPACES)
                 publisher_elem = opf_tree.find('.//dc:publisher', namespaces=NAMESPACES)
                 date_elem = opf_tree.find('.//dc:date', namespaces=NAMESPACES)
                 identifier_elems = opf_tree.xpath('.//dc:identifier/text()', namespaces=NAMESPACES)
-                
+
                 metadata['title'] = self._get_text_or_default(title_elem, 'Unknown Title')
                 metadata['author'] = self._get_text_or_default(author_elem, 'Unknown Author')
                 metadata['publisher'] = self._get_text_or_default(publisher_elem, '')
                 metadata['date'] = self._get_text_or_default(date_elem, '')
                 metadata['isbn'] = self._extract_isbn(identifier_elems)
-                
-        except Exception as e:
+
+        except (zipfile.BadZipFile, etree.XMLSyntaxError, OSError) as e:
             logger.error(f"Failed to read metadata from {path}: {e}")
         return metadata
 
-    def _get_text_or_default(self, element: Optional[etree._Element], default: str) -> str:
+    def _get_text_or_default(self, element: etree._Element | None, default: str) -> str:
         """Safely extracts text from an XML element or returns a default."""
         if element is not None and element.text:
             return element.text.strip()
         return default
 
-    def _extract_isbn(self, identifiers: List[str]) -> str:
+    def _extract_isbn(self, identifiers: list[str]) -> str:
         """Attempts to find a 10 or 13 digit ISBN from identifier strings."""
         for entry in identifiers:
             # Remove non-digits
@@ -70,11 +72,11 @@ class BookService:
                 return clean
         return ""
 
-    def format_filename(self, template: str, metadata: Dict[str, Any]) -> str:
+    def format_filename(self, template: str, metadata: dict[str, any]) -> str:
         """Generates a sanitized filename based on a template and metadata."""
         date_val = metadata.get('date') or ""
         year = date_val[:4] if date_val[:4].isdigit() else "Unknown"
-        
+
         try:
             name = template.format(
                 year=year,
@@ -87,7 +89,7 @@ class BookService:
                 name += ".epub"
             # Sanitize path separators
             return name.replace("/", "_").replace("\\", "_")
-        except Exception as e:
+        except (KeyError, ValueError) as e:
             logger.error(f"Error formatting filename with template '{template}': {e}")
             return ""
 
@@ -102,10 +104,10 @@ class BookService:
 
         with zin.open(rootfile_path) as opf_file:
             opf_tree = etree.parse(opf_file)
-        
+
         return rootfile_path, opf_tree
 
-    def update_metadata(self, path: Union[str, Path], new_metadata: Dict[str, Any]):
+    def update_metadata(self, path: str | Path, new_metadata: dict[str, any]):
         """Update EPUB metadata non-destructively."""
         def update_logic(opf_tree, _):
             if 'title' in new_metadata:
@@ -122,7 +124,7 @@ class BookService:
 
         self._update_epub_zip(path, update_logic)
 
-    def _update_epub_zip(self, path: Union[str, Path], process_func):
+    def _update_epub_zip(self, path: str | Path, process_func):
         """Internal helper to handle the common logic of updating an EPUB archive."""
         path = Path(path)
         temp_path = str(path) + ".tmp"
@@ -132,11 +134,11 @@ class BookService:
                 with zipfile.ZipFile(temp_path, 'w') as zout:
                     if 'mimetype' in zin.namelist():
                         zout.writestr('mimetype', zin.read('mimetype'), compress_type=zipfile.ZIP_STORED)
-                    
+
                     new_opf_tree, internal_img_update = process_func(opf_tree, rootfile_path)
 
                     for item in zin.infolist():
-                        if item.filename == 'mimetype': 
+                        if item.filename == 'mimetype':
                             continue
                         if item.filename == rootfile_path:
                             zout.writestr(item.filename, etree.tostring(new_opf_tree, encoding='utf-8', xml_declaration=True), compress_type=zipfile.ZIP_DEFLATED)
@@ -147,11 +149,11 @@ class BookService:
                         else:
                             zout.writestr(item, zin.read(item.filename))
             os.replace(temp_path, path)
-        except Exception as e:
+        except (OSError, zipfile.BadZipFile, etree.XMLSyntaxError) as e:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
             logger.error(f"ZIP update failed for {path}: {e}")
-            raise MetadataUpdateError(str(e))
+            raise MetadataUpdateError(str(e)) from e
 
     def _set_opf_tag(self, opf_tree, tag_name: str, value: str):
         """Helper to update or create a dc: tag in the OPF metadata."""
@@ -166,7 +168,8 @@ class BookService:
 
     def _set_identifier_tag(self, opf_tree, isbn: str):
         """Updates or adds an ISBN identifier."""
-        if not isbn: return
+        if not isbn:
+            return
         # Try to find an existing ISBN identifier
         found = False
         ids = opf_tree.xpath('.//dc:identifier', namespaces=NAMESPACES)
@@ -175,7 +178,7 @@ class BookService:
                 node.text = f"urn:isbn:{isbn}"
                 found = True
                 break
-        
+
         if not found:
             metadata_tag = opf_tree.find('.//opf:metadata', namespaces=NAMESPACES)
             if metadata_tag is not None:
@@ -184,23 +187,23 @@ class BookService:
                 # Standard EPUB property for the primary ID
                 new_elem.set(f"{{{NAMESPACES['opf']}}}scheme", "ISBN")
 
-    def get_cover(self, path: Union[str, Path]) -> Optional[bytes]:
+    def get_cover(self, path: str | Path) -> bytes | None:
         """Extract the cover image bytes from an EPUB file."""
         path = Path(path)
         try:
             with zipfile.ZipFile(path, 'r') as zin:
                 rootfile_path, opf_tree = self._get_opf_info(zin)
                 root_dir = str(Path(rootfile_path).parent)
-                
+
                 cover_href = self._find_cover_href(opf_tree)
                 if cover_href:
                     image_path = cover_href if root_dir == '.' else str(Path(root_dir) / cover_href)
                     return zin.read(image_path.replace('\\', '/'))
-        except Exception as e:
+        except (zipfile.BadZipFile, etree.XMLSyntaxError, KeyError) as e:
             logger.debug(f"Cover not found in {path}: {e}")
         return None
 
-    def _find_cover_href(self, opf_tree) -> Optional[str]:
+    def _find_cover_href(self, opf_tree) -> str | None:
         """Attempts to find the cover href using EPUB 3 and EPUB 2 strategies."""
         # EPUB 3
         cover_items = opf_tree.xpath('//opf:item[contains(@properties, "cover-image")]/@href', namespaces=NAMESPACES)
@@ -214,12 +217,12 @@ class BookService:
                 return cover_node[0]
         return None
 
-    def update_cover(self, path: Union[str, Path], image_path: Optional[str]):
+    def update_cover(self, path: str | Path, image_path: str | None):
         """Updates or removes the cover image."""
         def update_logic(opf_tree, rootfile_path):
             root_dir = Path(rootfile_path).parent
             cover_href = self._find_cover_href(opf_tree)
-            
+
             internal_img_path = None
             if cover_href:
                 full_img_path = root_dir / cover_href if str(root_dir) != '.' else Path(cover_href)
@@ -235,25 +238,26 @@ class BookService:
                     node.getparent().remove(node)
                 for node in opf_tree.xpath('//opf:meta[@name="cover"]', namespaces=NAMESPACES):
                     node.getparent().remove(node)
-            
+
             img_update = None
             if internal_img_path:
                 img_update = {'path': internal_img_path, 'new_data': img_data}
-                
+
             return opf_tree, img_update
 
         self._update_epub_zip(path, update_logic)
 
-    def fetch_metadata_by_isbn(self, isbn: str, provider: str = "google") -> Dict[str, Any]:
+    def fetch_metadata_by_isbn(self, isbn: str, provider: str = "google") -> dict[str, any]:
         """Fetches book metadata from the selected provider."""
         isbn = "".join(filter(str.isdigit, isbn))
-        if not isbn: return {}
-        
+        if not isbn:
+            return {}
+
         if provider == "openlibrary":
             return self._fetch_openlibrary(isbn)
         return self._fetch_google(isbn)
 
-    def _fetch_google(self, isbn: str) -> Dict[str, Any]:
+    def _fetch_google(self, isbn: str) -> dict[str, any]:
         url = f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}"
         try:
             with urllib.request.urlopen(url, timeout=10) as response:
@@ -271,15 +275,15 @@ class BookService:
                     }
         except urllib.error.HTTPError as e:
             if e.code in (503, 504, 429):
-                raise NetworkError(f"Google Books service is temporarily unavailable (HTTP {e.code})")
+                raise NetworkError(f"Google Books service is temporarily unavailable (HTTP {e.code})") from e
             logger.error(f"Google Books HTTP error {e.code}: {e}")
         except urllib.error.URLError as e:
-            raise NetworkError(f"Connection to Google Books failed: {e.reason}")
-        except Exception as e:
+            raise NetworkError(f"Connection to Google Books failed: {e.reason}") from e
+        except json.JSONDecodeError as e:
             logger.error(f"Google Books fetch failed: {e}")
         return {}
 
-    def _fetch_openlibrary(self, isbn: str) -> Dict[str, Any]:
+    def _fetch_openlibrary(self, isbn: str) -> dict[str, any]:
         url = f"https://openlibrary.org/api/books?bibkeys=ISBN:{isbn}&format=json&jscmd=data"
         try:
             with urllib.request.urlopen(url, timeout=10) as response:
@@ -297,10 +301,10 @@ class BookService:
                     }
         except urllib.error.HTTPError as e:
             if e.code in (503, 504, 429):
-                raise NetworkError(f"Open Library service is temporarily unavailable (HTTP {e.code})")
+                raise NetworkError(f"Open Library service is temporarily unavailable (HTTP {e.code})") from e
             logger.error(f"Open Library HTTP error {e.code}: {e}")
         except urllib.error.URLError as e:
-            raise NetworkError(f"Connection to Open Library failed: {e.reason}")
-        except Exception as e:
+            raise NetworkError(f"Connection to Open Library failed: {e.reason}") from e
+        except json.JSONDecodeError as e:
             logger.error(f"Open Library fetch failed: {e}")
         return {}

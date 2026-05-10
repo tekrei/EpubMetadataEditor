@@ -15,9 +15,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "autopep8",
-    "black",
-    "isort"
+    "pre-commit",
+    "ruff"
 ]
 
 [project.scripts]

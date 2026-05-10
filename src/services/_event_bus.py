@@ -1,5 +1,7 @@
 from collections import defaultdict
-from typing import Callable, Any
+from collections.abc import Callable
+from typing import Any
+
 
 class EventBus:
     """Simple event bus to decouple UI components."""

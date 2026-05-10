@@ -1,8 +1,8 @@
 import gi
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk # noqa
 
+gi.require_version('Gtk', '3.0')
 from data import AppEvent
+
 
 class ToolbarView:
     def __init__(self, builder, event_bus):

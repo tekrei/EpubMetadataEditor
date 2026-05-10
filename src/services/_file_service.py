@@ -1,8 +1,8 @@
+import logging
 import os
 import sys
-import logging
 from pathlib import Path
-from typing import List, Union
+
 from gi.repository import Gio
 
 logger = logging.getLogger(__name__)
@@ -43,14 +43,14 @@ class FileService:
             subprocess.Popen([opener, file_path])
 
     @staticmethod
-    def find_files(directory: Union[str, Path], pattern: str, recursive: bool = True) -> List[Path]:
+    def find_files(directory: str | Path, pattern: str, recursive: bool = True) -> list[Path]:
         """Generic method to find files matching a pattern in a directory."""
         root = Path(directory)
-        
+
         if recursive:
             files = list(root.rglob(pattern, case_sensitive=False))
         else:
             files = list(root.glob(pattern, case_sensitive=False))
-            
+
         files.sort(key=lambda p: p.name.lower())
         return files
