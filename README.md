@@ -5,6 +5,11 @@ A lightweight tool for viewing and editing EPUB metadata, built as a learning pr
 ## Features
 
 - View and edit EPUB2/EPUB3 metadata (Title, Author, etc.).
+- Fetch metadata from the web via ISBN (Google Books & Open Library providers).
+- Side-by-side metadata comparison and selective merging.
+- Cover image management: view, update, clear, or download from the internet.
+- Hierarchical folder structure in book list with expand/collapse support.
+- Fully responsive UI using background threading for network and I/O operations.
 - Efficient manipulation using `zipfile` and `lxml` instead of full re-writes.
 - Built with modern Python tooling (`uv`, `hatch`).
 - Recursive directory scanning for EPUB files.
@@ -42,9 +47,9 @@ uv sync
 
 ## Possible improvements
 
-- Add unit tests for metadata extraction logic
-- Updating all metadata of selected book using a form instead of updating each metadata value separately
+- Add unit tests for metadata extraction and ISBN detection logic.
+- Implement a persistent SQLite cache for faster library loading.
 
 ## License
 
-This project is licensed under the Apache License 2.0. See the LICENSE file for details.
+This project is licensed under the Apache License 2.0. See the [LICENSE](https://github.com/tekrei/EpubMetadataEditor/blob/main/LICENSE) file for details.
