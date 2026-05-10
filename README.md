@@ -8,7 +8,9 @@ A lightweight tool for viewing and editing EPUB metadata, built as a learning pr
 - Fetch metadata from the web via ISBN (Google Books & Open Library providers).
 - Side-by-side metadata comparison and selective merging.
 - Cover image management: view, update, clear, or download from the internet.
-- Hierarchical folder structure in book list with expand/collapse support.
+- Batch renaming of files based on metadata using customizable templates.
+- Hierarchical folder structure with search filtering and range selection (Shift+Click).
+- Integrated file actions: Move to Trash and Open containing folder.
 - Fully responsive UI using background threading for network and I/O operations.
 - Efficient manipulation using `zipfile` and `lxml` instead of full re-writes.
 - Built with modern Python tooling (`uv`, `hatch`).
@@ -38,12 +40,20 @@ Using `uv` to manage the virtual environment and dependencies:
 
 ```bash
 uv sync
+uv run pre-commit install
 ```
 
 ## Running the Application
 
 - **Standard Run:** `uv run epub-editor`
 - **Development Run:** `uv run python -m epub_metadata_editor.main`
+
+## Development
+
+This project uses `ruff` for linting and formatting via `pre-commit`.
+
+- **Install hooks:** `uv run pre-commit install`
+- **Run manually:** `uv run pre-commit run --all-files`
 
 ## Possible improvements
 
