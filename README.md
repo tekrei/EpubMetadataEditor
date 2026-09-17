@@ -1,66 +1,104 @@
-# A simple Epub Metadata Editor
+---
+title: Basit EPub Editörü
+emoji: 📖
+colorFrom: blue
+colorTo: green
+sdk: gradio
+sdk_version: "6.27.0"
+python_version: "3.13"
+app_file: main.py
+pinned: false
+---
+# EPUB Metadata Editor
 
-A lightweight tool for viewing and editing EPUB metadata, built as a learning project for [GTK](https://www.gtk.org/) with Python.
+[![Basit EPub Editörü](https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-sm.svg)](https://huggingface.co/spaces/tekrei/epubeditor)
 
-## Features
+A lightweight web-based tool for viewing and editing EPUB metadata, originally built as a GTK application and converted to a **Gradio** web interface. Managed using **`uv`**.
 
-- View and edit EPUB2/EPUB3 metadata (Title, Author, etc.).
-- Fetch metadata from the web via ISBN (Google Books & Open Library providers).
-- Side-by-side metadata comparison and selective merging.
-- Cover image management: view, update, clear, or download from the internet.
-- Batch renaming of files based on metadata using customizable templates.
-- Hierarchical folder structure with search filtering and range selection (Shift+Click).
-- Integrated file actions: Move to Trash and Open containing folder.
-- Fully responsive UI using background threading for network and I/O operations.
-- Efficient manipulation using `zipfile` and `lxml` instead of full re-writes.
-- Built with modern Python tooling (`uv`, `hatch`).
-- Recursive directory scanning for EPUB files.
-- Native GTK3 interface.
+---
 
-## Libraries
+## 🚀 Features
 
-- **Package Manager:** uv
-- **UI Framework:** PyGObject (GTK3)
-- **XML Processing:** `lxml`
-- **Archive Handling:** Built-in `zipfile`
+- **View & Edit EPUB Metadata:** Title, Author, Publisher, Language, and Cover Image.
+- **Modern Web Interface:** Built with Gradio (`gr.Blocks`), runs directly in your browser.
+- **Fast Package Management:** Uses `uv` for lightning-fast dependency management and environment execution.
+- **Efficient Archive Handling:** Lightweight EPUB XML/zip metadata updating via `lxml` and `zipfile`.
 
-## Installation & Setup
+---
 
-This project is primarily tested on GNU/Linux.
+## 🛠️ Prerequisites & Installation
 
-### 1. System Dependencies (Ubuntu/Debian)
+Ensure you have **`uv`** installed on your system. If not, install it via:
 
 ```bash
-sudo apt update && sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0 gobject-introspection libgirepository-2.0-dev appmenu-gtk3-module libcanberra-gtk3-module
+# On macOS / Linux:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# On Windows (PowerShell):
+powershell -c "irm https://astral.sh/uv/install.sh | iex"
 ```
 
-### 2. Python Dependencies
+### 1. Project Setup & Dependencies
 
-Using `uv` to manage the virtual environment and dependencies:
+Add Gradio and sync environment dependencies using `uv`:
 
 ```bash
+# Add Gradio dependency
+uv add gradio
+
+# Synchronize virtual environment dependencies
 uv sync
-uv run pre-commit install
 ```
 
-## Running the Application
+---
 
-- **Standard Run:** `uv run epub-editor`
-- **Development Run:** `uv run python -m epub_metadata_editor.main`
+## 🏃 Running the Application
 
-## Development
+You can launch the application directly through `uv` without manually activating the virtual environment:
 
-This project uses `ruff` for linting and formatting via `pre-commit`.
+```bash
+uv run python src/main.py
+```
 
-- **Install hooks:** `uv run pre-commit install`
-- **Run manually:** `uv run pre-commit run --all-files`
+Once executed, open your web browser and navigate to:
+```text
+http://127.0.0.1:7860
+```
 
-## Possible improvements
+---
 
-- Add unit tests for metadata extraction and ISBN detection logic.
-- Implement a persistent SQLite cache for faster library loading.
-- Migrate to [GTK 4.0](https://docs.gtk.org/gtk4/).
+## 📂 Project Structure
 
-## License
+```text
+EpubMetadataEditor/
+├── pyproject.toml         # Project definition and dependencies (uv)
+├── uv.lock                # Dependency lockfile
+├── README.md              # Project documentation
+└── src/
+    ├── main.py            # Main entry point (Gradio App)
+    ├── services/          # Backend EPUB processing services
+    │   ├── _book_service.py
+    │   ├── _file_service.py
+    │   └── ...
+    └── ui/                # (Legacy GTK components)
+```
 
-This project is licensed under the Apache License 2.0. See the [LICENSE](https://github.com/tekrei/EpubMetadataEditor/blob/main/LICENSE) file for details.
+---
+
+## 🧰 Development & Code Quality
+
+If you wish to run linting and formatting via pre-commit:
+
+```bash
+# Install pre-commit hooks
+uv run pre-commit install
+
+# Run manual check
+uv run pre-commit run --all-files
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the Apache License 2.0.

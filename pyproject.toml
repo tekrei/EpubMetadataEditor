@@ -5,23 +5,25 @@ description = "A simple Epub Metadata Editor"
 authors = [
     { name = "T. E. Kalaycı" }
 ]
-license = { text = "Apache-2.0" }
-requires-python = ">=3.12"
+readme = "README.md"
+requires-python = ">=3.13"
+LICENSE = "Apache-2.0"
 dependencies = [
-    "pycairo>=1.20.0",
-    "PyGObject>=3.38.0",
-    "lxml>=4.6.2",
+    "gradio>=6.8.0"
 ]
 
 [dependency-groups]
 dev = [
-    "pre-commit",
-    "ruff"
+    "ruff>=0.3.0",
+    "pre-commit>=3.6.0",
 ]
 
-[project.scripts]
-epub-editor = "main:main"
+[tool.ruff]
+line-length = 120
 
-[build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
+[tool.ruff.lint]
+# E/F: Pyflakes/Error, I: isort, N: pep8-naming, UP: pyupgrade, B: flake8-bugbear
+select = ["E", "F", "I", "N", "UP", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
