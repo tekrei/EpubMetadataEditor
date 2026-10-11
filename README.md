@@ -1,6 +1,6 @@
 # A simple Epub Metadata Editor
 
-A lightweight tool for viewing and editing EPUB metadata, built as a learning project for [GTK](https://www.gtk.org/) with Python.
+A lightweight tool for viewing and editing EPUB metadata, built with Python and PySide6.
 
 ## Features
 
@@ -15,26 +15,33 @@ A lightweight tool for viewing and editing EPUB metadata, built as a learning pr
 - Efficient manipulation using `zipfile` and `lxml` instead of full re-writes.
 - Built with modern Python tooling (`uv`, `hatch`).
 - Recursive directory scanning for EPUB files.
-- Native GTK3 interface.
+- Native Qt interface with PySide6.
 
 ## Libraries
 
 - **Package Manager:** uv
-- **UI Framework:** PyGObject (GTK3)
+- **UI Framework:** PySide6 (Qt)
 - **XML Processing:** `lxml`
 - **Archive Handling:** Built-in `zipfile`
 
 ## Installation & Setup
 
-This project is primarily tested on GNU/Linux.
+This project is primarily tested on GNU/Linux and uses PySide6 for its desktop UI.
 
-### 1. System Dependencies (Ubuntu/Debian)
+### Linux system dependencies (Ubuntu/Debian, X11)
+
+PySide6 includes Qt, but the X11 platform plugin also needs system libraries:
 
 ```bash
-sudo apt update && sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0 gobject-introspection libgirepository-2.0-dev appmenu-gtk3-module libcanberra-gtk3-module
+sudo apt install libgl1 libegl1 libxkbcommon0 libxkbcommon-x11-0 \
+	libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-xkb1
 ```
 
-### 2. Python Dependencies
+Running the desktop UI also requires an active X11 or Wayland display. Headless
+containers need display forwarding or a virtual desktop; installing these
+libraries alone does not provide a display server.
+
+### Install Dependencies
 
 Using `uv` to manage the virtual environment and dependencies:
 
@@ -59,7 +66,7 @@ This project uses `ruff` for linting and formatting via `pre-commit`.
 
 - Add unit tests for metadata extraction and ISBN detection logic.
 - Implement a persistent SQLite cache for faster library loading.
-- Migrate to [GTK 4.0](https://docs.gtk.org/gtk4/).
+- Package standalone builds for Linux, Windows, and macOS.
 
 ## License
 

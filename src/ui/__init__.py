@@ -1,7 +1,5 @@
-from ui._book_details import BookDetailsView
-from ui._book_list import BookListView
-from ui._dialogs import Dialogs
-from ui._toolbar import ToolbarView
-from ui._window import MainWindowGTK
+from ui._qt_dialogs import Dialogs
+from ui._qt_views import BookDetailsView, BookListView
+from ui._qt_window import MainWindow
 
-__all__ = ["BookDetailsView", "BookListView", "Dialogs", "MainWindowGTK", "ToolbarView"]
+__all__ = ["BookDetailsView", "BookListView", "Dialogs", "MainWindow"]

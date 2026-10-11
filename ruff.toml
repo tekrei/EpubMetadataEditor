@@ -15,9 +15,8 @@ line-length = 88
 # SIM: flake8-simplify
 select = ["E", "W", "F", "I", "B", "UP", "RUF", "BLE", "SIM"]
 
-# E501: Line length (handled by formatter)
-# E402: Module level import not at top (conflicts with GTK's gi.require_version)
-ignore = ["E501", "E402"]
+# E501: Line length is handled by the formatter.
+ignore = ["E501"]
 
 [lint.isort]
 known-first-party = ["services", "ui", "data"]

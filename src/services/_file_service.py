@@ -3,7 +3,7 @@ import os
 import sys
 from pathlib import Path
 
-from gi.repository import Gio
+from send2trash import send2trash
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +19,7 @@ class FileService:
 
     @staticmethod
     def trash(file_path: str):
-        gfile = Gio.File.new_for_path(file_path)
-        gfile.trash(None)
+        send2trash(file_path)
 
     @staticmethod
     def open_containing_folder(file_path: str):

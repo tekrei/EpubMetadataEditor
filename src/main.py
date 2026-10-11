@@ -2,18 +2,17 @@
 
 import logging
 
-import gi
+from PySide6.QtWidgets import QApplication
 
-gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk
-
-from ui import MainWindowGTK
+from ui import MainWindow
 
 
 def main():
-    hwg = MainWindowGTK()
-    hwg.window.show_all()
-    Gtk.main()
+    app = QApplication([])
+    app.setApplicationName("EpubMetadata Editor")
+    window = MainWindow()
+    window.show()
+    return app.exec()
 
 
 if __name__ == "__main__":
